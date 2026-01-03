@@ -49,6 +49,22 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
   - Auto-activates voice input when detected
 - **CPU Optimization**: Changed default model to qwen3:1.7b for better CPU performance
 
+### Phase 3 - Customization Features (January 3, 2025)
+- **Personality Sliders**:
+  - Sarcasm Level (0-100%): Controls how snarky vs gentle she is
+  - Sweetness Level (0-100%): Controls how affectionate vs independent she is
+  - Dynamic system prompt generation based on settings
+  - "Current Vibe" preview shows personality description
+- **Avatar Customization**:
+  - Skin Tone: 6 options (light, medium, olive, tan, brown, dark)
+  - Hair Color: 8 options (black, brown, blonde, red, purple, blue, pink, white)
+  - Eye Color: 8 options (purple, blue, green, brown, amber, red, pink, gray)
+  - Earring Color: 8 options + none
+  - Live preview in settings panel
+- **Settings Panel Redesign**:
+  - Organized into 3 tabs: Personality, Avatar, Voice
+  - Clean UI with icons and helpful descriptions
+
 ## Tech Stack
 - Frontend: React 19, TailwindCSS, Framer Motion, shadcn/ui
 - Backend: FastAPI, Motor (async MongoDB), httpx (Ollama client)
@@ -59,15 +75,15 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
 ## P0/P1/P2 Features Remaining
 
 ### P0 (Critical)
-- None - All core features complete
+- None - All requested features complete
 
 ### P1 (Important)
 - Voice wake word improvements (better accuracy)
-- Custom avatar customization
+- Save/load avatar presets
 - Export conversation history
 
 ### P2 (Nice to Have)
-- Personality adjustment sliders
 - Mood tracking over time
 - Daily check-ins and reminders
 - Multiple AI personas
+- Custom wake word phrases
