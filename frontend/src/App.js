@@ -50,6 +50,7 @@ function App() {
     eyes: 'purple',
     accessory: 'purple'
   });
+  const [adultMode, setAdultMode] = useState(false);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -199,7 +200,8 @@ function App() {
         conversation_id: conversationId,
         personality: {
           sarcasm: sarcasmLevel,
-          sweetness: sweetnessLevel
+          sweetness: sweetnessLevel,
+          adultMode: adultMode
         }
       });
 
@@ -247,7 +249,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript, wakeWordActive, pauseWakeWord, sarcasmLevel, sweetnessLevel]);
+  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript, wakeWordActive, pauseWakeWord, sarcasmLevel, sweetnessLevel, adultMode]);
 
   // Handle voice input completion
   useEffect(() => {
@@ -662,6 +664,8 @@ function App() {
         onSweetnessChange={setSweetnessLevel}
         avatarCustomization={avatarCustomization}
         onAvatarCustomizationChange={setAvatarCustomization}
+        adultMode={adultMode}
+        onAdultModeChange={setAdultMode}
       />
 
       {/* Mood Journal */}
