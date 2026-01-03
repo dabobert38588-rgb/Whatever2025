@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Volume2, Sparkles, Palette, Save, Trash2, Plus } from 'lucide-react';
+import { X, Volume2, Sparkles, Palette, Save, Trash2, Plus, Flame, AlertTriangle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
+import { Switch } from './ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScrollArea } from './ui/scroll-area';
 import {
@@ -20,7 +21,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from './ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import AnimatedAvatar, { avatarOptions } from './AnimatedAvatar';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -45,7 +58,9 @@ const SettingsPanel = ({
   sweetnessLevel,
   onSweetnessChange,
   avatarCustomization,
-  onAvatarCustomizationChange
+  onAvatarCustomizationChange,
+  adultMode,
+  onAdultModeChange
 }) => {
   const [personalityPresets, setPersonalityPresets] = useState({ default: [], custom: [] });
   const [avatarPresets, setAvatarPresets] = useState([]);
@@ -53,6 +68,7 @@ const SettingsPanel = ({
   const [newAvatarPresetName, setNewAvatarPresetName] = useState('');
   const [showSavePersonality, setShowSavePersonality] = useState(false);
   const [showSaveAvatar, setShowSaveAvatar] = useState(false);
+  const [showAdultConfirm, setShowAdultConfirm] = useState(false);
 
   // Fetch presets on open
   useEffect(() => {
@@ -149,6 +165,21 @@ const SettingsPanel = ({
     } catch (err) {
       toast.error('Failed to delete preset');
     }
+  };
+
+  const handleAdultModeToggle = () => {
+    if (!adultMode) {
+      setShowAdultConfirm(true);
+    } else {
+      onAdultModeChange(false);
+      toast.info('Adult mode disabled');
+    }
+  };
+
+  const confirmAdultMode = () => {
+    onAdultModeChange(true);
+    setShowAdultConfirm(false);
+    toast.success('Adult mode enabled 🔥');
   };
 
   const handleAvatarChange = (key, value) => {
