@@ -474,7 +474,8 @@ async def get_mood_journal():
             "thinking": f"I've had to think {top_count} times. Your questions are... interesting.",
             "surprised": f"You've surprised me {top_count} times. Impressive, actually.",
             "concerned": f"I've been concerned {top_count} times. Please take better care of yourself.",
-            "neutral": f"{top_count} neutral responses. Even I need a break sometimes."
+            "neutral": f"{top_count} neutral responses. Even I need a break sometimes.",
+            "flirty": f"{top_count} flirty moments. Someone's been keeping me... entertained. 😏"
         }
         commentary = mood_comments.get(top_mood, f"Top mood: {top_mood} ({top_count} times)")
     
