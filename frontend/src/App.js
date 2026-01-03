@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
-import { Send, Loader2, Menu, Radio } from 'lucide-react';
+import { Send, Loader2, Menu, Radio, BookHeart } from 'lucide-react';
 
 import VoiceOrb from './components/VoiceOrb';
 import ChatMessage from './components/ChatMessage';
@@ -10,6 +10,7 @@ import ControlBar from './components/ControlBar';
 import SettingsPanel from './components/SettingsPanel';
 import AnimatedAvatar from './components/AnimatedAvatar';
 import ConversationSidebar from './components/ConversationSidebar';
+import MoodJournal from './components/MoodJournal';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { ScrollArea } from './components/ui/scroll-area';
@@ -31,6 +32,7 @@ function App() {
   const [conversationId, setConversationId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showMoodJournal, setShowMoodJournal] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [ollamaStatus, setOllamaStatus] = useState('checking');
   const [ollamaModel, setOllamaModel] = useState('');
@@ -431,6 +433,17 @@ function App() {
           >
             <Radio className={`h-5 w-5 ${wakeWordActive ? 'text-secondary animate-pulse' : ''}`} />
           </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowMoodJournal(true)}
+            className="rounded-full"
+            data-testid="mood-journal-btn"
+            title="Mood Journal"
+          >
+            <BookHeart className="h-5 w-5" />
+          </Button>
         </motion.header>
 
         {/* Chat area */}
@@ -649,6 +662,12 @@ function App() {
         onSweetnessChange={setSweetnessLevel}
         avatarCustomization={avatarCustomization}
         onAvatarCustomizationChange={setAvatarCustomization}
+      />
+
+      {/* Mood Journal */}
+      <MoodJournal
+        isOpen={showMoodJournal}
+        onClose={() => setShowMoodJournal(false)}
       />
     </div>
   );
