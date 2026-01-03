@@ -65,6 +65,25 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
   - Organized into 3 tabs: Personality, Avatar, Voice
   - Clean UI with icons and helpful descriptions
 
+### Phase 4 - Presets & Mood Journal (January 3, 2025)
+- **Personality Quick Presets**:
+  - 6 built-in presets: Tough Love, Sweetheart, Full Sass, Chill Vibes, Chaos Gremlin, Comfort Mode
+  - One-click application of sarcasm/sweetness values
+  - Save custom presets with name
+  - Delete custom presets
+- **Avatar Presets**:
+  - Save current look with custom name
+  - Grid view of saved looks with preview
+  - One-click application
+  - Delete saved looks
+- **Mood Journal**:
+  - Tracks all AI response moods from conversations
+  - Statistics: Total responses, Top mood with emoji
+  - Mood distribution with progress bars
+  - Recent moods timeline with previews
+  - Sarcastic AI commentary (e.g., "I've rolled my eyes 47 times")
+  - Bottom sheet panel with refresh button
+
 ## Tech Stack
 - Frontend: React 19, TailwindCSS, Framer Motion, shadcn/ui
 - Backend: FastAPI, Motor (async MongoDB), httpx (Ollama client)
@@ -78,12 +97,12 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
 - None - All requested features complete
 
 ### P1 (Important)
-- Voice wake word improvements (better accuracy)
-- Save/load avatar presets
-- Export conversation history
+- Voice wake word accuracy improvements
+- Export conversation/mood history
+- Mood trends over time (weekly/monthly charts)
 
 ### P2 (Nice to Have)
-- Mood tracking over time
 - Daily check-ins and reminders
 - Multiple AI personas
 - Custom wake word phrases
+- Share mood journal stats
