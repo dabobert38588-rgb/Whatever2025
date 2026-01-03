@@ -346,7 +346,7 @@ async def get_personality_presets():
 async def create_personality_preset(preset: PersonalityPreset):
     """Create a custom personality preset"""
     doc = preset.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
+    doc['created_at'] = datetime.now(timezone.utc).isoformat()
     result = await db.personality_presets.insert_one(doc)
     # Remove the MongoDB ObjectId before returning
     doc.pop('_id', None)
