@@ -4,8 +4,10 @@
 Build a local smart AI girlfriend/assistant named Anjhelika with:
 - Dark humor and sarcastic personality (mixed with sweet/supportive/witty/smart)
 - Bidirectional voice chat (speech-to-text user input, text-to-speech AI responses)
-- Powered by Ollama with Qwen3 model (local LLM)
-- Surprise theme (resulted in Cyber-Noir aesthetic)
+- Powered by Ollama with Qwen3 model (local LLM) - CPU optimized with qwen3:1.7b
+- Mood-based animated avatar expressions
+- Conversation history sidebar
+- Wake word detection ("Hey Anjhelika")
 
 ## User Personas
 - **Primary User**: Individual seeking a fun, personalized AI companion with attitude
@@ -15,59 +17,57 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
 1. ✅ AI Chat with personality (dark humor, sarcasm)
 2. ✅ Voice input via Web Speech API (STT)
 3. ✅ Voice output via Web Speech API (TTS)
-4. ✅ Ollama integration for local LLM
+4. ✅ Ollama integration for local LLM (CPU-friendly qwen3:1.7b)
 5. ✅ Conversation persistence (MongoDB)
-6. ✅ Modern UI with distinctive theme
+6. ✅ Modern UI with Cyber-Noir theme
+7. ✅ Mood-based avatar animations
+8. ✅ Conversation history sidebar
+9. ✅ Wake word detection
 
-## What's Been Implemented (January 3, 2025)
+## What's Been Implemented
 
-### Backend (FastAPI)
-- `/api/chat` - POST endpoint for chat with Ollama integration
-- `/api/health` - Health check with Ollama status
-- `/api/conversations` - List all conversations
-- `/api/conversations/{id}` - Get/Delete specific conversation
-- Anjhelika personality system prompt embedded
+### Phase 1 - MVP (January 3, 2025)
+- Basic chat interface with VoiceOrb
+- Ollama integration with personality prompt
+- Speech-to-text and text-to-speech
 - MongoDB conversation storage
+- Cyber-noir dark theme
 
-### Frontend (React)
-- **VoiceOrb**: Central interactive element with state animations (idle, listening, thinking, speaking)
-- **ChatMessage**: Styled message bubbles with speak button
-- **ControlBar**: Floating control bar (mic, mute, clear, settings)
-- **SettingsPanel**: Voice config, AI status display
-- **Custom Hooks**: useSpeechRecognition, useSpeechSynthesis
-
-### Design System
-- **Theme**: Cyber-Noir (dark mode only)
-- **Colors**: Deep black bg, Electric Purple primary (#D946EF), Toxic Green secondary (#A3E635)
-- **Typography**: Unbounded (headings), Manrope (body), JetBrains Mono (code)
-- **Effects**: Glassmorphism, neon glows, smooth animations
+### Phase 2 - Enhanced Features (January 3, 2025)
+- **Animated SVG Avatar**: Custom drawn face with mood expressions
+  - Moods: neutral, smirk, eyeroll, loving, sassy, thinking, surprised, concerned
+  - AI responds with [MOOD:emotion] tag, parsed and displayed
+  - Speaking animation on mouth
+- **Conversation Sidebar**: 
+  - List of past conversations
+  - New chat button
+  - Delete individual conversations
+  - Preview text for each conversation
+- **Wake Word Detection**:
+  - Toggle button in header
+  - Listens for "Hey Anjhelika" (and variations)
+  - Auto-activates voice input when detected
+- **CPU Optimization**: Changed default model to qwen3:1.7b for better CPU performance
 
 ## Tech Stack
 - Frontend: React 19, TailwindCSS, Framer Motion, shadcn/ui
 - Backend: FastAPI, Motor (async MongoDB), httpx (Ollama client)
 - Database: MongoDB
-- LLM: Ollama with Qwen3 (local)
+- LLM: Ollama with qwen3:1.7b (CPU-optimized)
 - Voice: Web Speech API (browser-native)
 
 ## P0/P1/P2 Features Remaining
 
 ### P0 (Critical)
-- None - MVP complete
+- None - All core features complete
 
 ### P1 (Important)
-- Conversation history list view
-- Multiple conversation support
-- Voice wake word detection
+- Voice wake word improvements (better accuracy)
+- Custom avatar customization
+- Export conversation history
 
 ### P2 (Nice to Have)
-- Custom avatar upload
 - Personality adjustment sliders
 - Mood tracking over time
 - Daily check-ins and reminders
-- Export conversation history
-
-## Next Tasks
-1. User needs to install and run Ollama locally with Qwen3 model
-2. Configure OLLAMA_URL if not on localhost:11434
-3. Consider adding conversation list sidebar
-4. Add voice customization with more TTS engines
+- Multiple AI personas
