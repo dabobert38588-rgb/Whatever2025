@@ -123,19 +123,13 @@ function App() {
     }
   }, [transcript]);
 
-  // Check Ollama status and load conversations on mount
+  // Check API status on mount
   useEffect(() => {
     const checkHealth = async () => {
       try {
         const response = await axios.get(`${API}/health`);
-        setOllamaStatus(response.data.ollama);
-        setOllamaModel(response.data.configured_model);
-        
-        if (response.data.ollama !== 'connected') {
-          toast.error('Ollama is not connected. Make sure it\'s running locally.', {
-            duration: 5000
-          });
-        }
+        setOllamaStatus(response.data.api_key_configured ? 'connected' : 'disconnected');
+        setOllamaModel(response.data.model || 'gpt-5.2');
       } catch (error) {
         setOllamaStatus('disconnected');
         toast.error('Cannot connect to backend server.');
@@ -537,7 +531,7 @@ function App() {
                 {/* Status indicators */}
                 {ollamaStatus !== 'connected' && (
                   <p className="text-xs text-destructive">
-                    Ollama disconnected - Run: ollama serve
+                    API not configured - Check backend connection
                   </p>
                 )}
               </motion.div>
