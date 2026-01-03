@@ -147,6 +147,9 @@ def main():
     # Test chat endpoint (expected to fail)
     chat_success, chat_response = tester.test_chat_endpoint()
     
+    # Test chat with personality parameters
+    personality_success, personality_response = tester.test_chat_with_personality()
+    
     # Test conversations endpoint
     conversations_success, conversations_response = tester.test_conversations_endpoint()
 
