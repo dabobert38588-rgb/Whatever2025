@@ -347,7 +347,9 @@ async def create_personality_preset(preset: PersonalityPreset):
     """Create a custom personality preset"""
     doc = preset.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    await db.personality_presets.insert_one(doc)
+    result = await db.personality_presets.insert_one(doc)
+    # Remove the MongoDB ObjectId before returning
+    doc.pop('_id', None)
     return {"message": "Preset created", "preset": doc}
 
 
