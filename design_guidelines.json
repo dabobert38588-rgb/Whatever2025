@@ -1,0 +1,139 @@
+{
+  "identity": {
+    "name": "Anjhelika",
+    "persona": "Dark humor, sarcastic, witty, supportive but edgy. A 'Cyber-Noir' AI companion.",
+    "theme_strategy": "Dark Mode Only (Force Dark)",
+    "emotional_archetype": "Electric & Neon (Future, Speed, Disruption)"
+  },
+  "design_system": {
+    "colors": {
+      "palette": {
+        "background": "#050505",
+        "foreground": "#E5E7EB",
+        "card": "#0A0A0A",
+        "card_foreground": "#E5E7EB",
+        "popover": "#0A0A0A",
+        "popover_foreground": "#E5E7EB",
+        "primary": "#D946EF",
+        "primary_foreground": "#000000",
+        "secondary": "#A3E635",
+        "secondary_foreground": "#000000",
+        "muted": "#1F2937",
+        "muted_foreground": "#9CA3AF",
+        "accent": "#8B5CF6",
+        "accent_foreground": "#FFFFFF",
+        "destructive": "#EF4444",
+        "destructive_foreground": "#FFFFFF",
+        "border": "#27272A",
+        "input": "#27272A",
+        "ring": "#D946EF"
+      },
+      "gradients": {
+        "primary_glow": "linear-gradient(135deg, #D946EF 0%, #8B5CF6 100%)",
+        "toxic_glow": "linear-gradient(135deg, #A3E635 0%, #22C55E 100%)",
+        "dark_glass": "rgba(10, 10, 10, 0.7)"
+      }
+    },
+    "typography": {
+      "headings": {
+        "family": "Unbounded, sans-serif",
+        "weights": ["400", "700", "900"],
+        "usage": "Main titles, hero text, personality statements"
+      },
+      "body": {
+        "family": "Manrope, sans-serif",
+        "weights": ["400", "500", "600"],
+        "usage": "Chat messages, settings, labels"
+      },
+      "mono": {
+        "family": "JetBrains Mono, monospace",
+        "usage": "Code snippets, technical data, timestamps"
+      }
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-12",
+      "section_gap": "gap-8",
+      "element_gap": "gap-4"
+    },
+    "radius": {
+      "default": "0.75rem",
+      "button": "9999px",
+      "card": "1rem"
+    },
+    "effects": {
+      "glassmorphism": "backdrop-blur-xl bg-black/60 border border-white/10",
+      "neon_shadow": "0 0 20px rgba(217, 70, 239, 0.3)",
+      "toxic_shadow": "0 0 15px rgba(163, 230, 53, 0.2)"
+    }
+  },
+  "assets": {
+    "images": {
+      "avatar_main": {
+        "url": "https://images.unsplash.com/photo-1634910440823-193b061d28a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjB3b21hbiUyMHBvcnRyYWl0JTIwbmVvbnxlbnwwfHx8fDE3Njc0MTExMjF8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Cyberpunk woman with neon lighting, used for Anjhelika's avatar",
+        "category": "avatar"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "preferred_style": "rounded, stroke-width-2"
+    }
+  },
+  "layout_strategies": {
+    "main_chat": {
+      "structure": "Full-screen immersive container. Chat history flows from bottom. Input area floats above bottom edge.",
+      "visualizer_placement": "Center screen or integrated into the avatar glow when speaking.",
+      "avatar_style": "Hexagonal or Circular with animated border (pulsing based on state)."
+    },
+    "settings_panel": {
+      "structure": "Slide-over or Modal with 'Glassmorphism' backdrop.",
+      "style": "Clean, toggle-heavy, using 'Toxic Green' for active states."
+    }
+  },
+  "components": {
+    "VoiceOrb": {
+      "description": "A central visual element that reacts to voice state (Listening, Thinking, Speaking).",
+      "states": {
+        "listening": "Pulsing soft purple",
+        "thinking": "Rapid spinning or chaotic animation (Toxic Green)",
+        "speaking": "Waveform visualization (Magenta)"
+      }
+    },
+    "ChatMessage": {
+      "description": "Individual chat bubbles.",
+      "styles": {
+        "user": "bg-muted text-foreground rounded-tr-none",
+        "ai": "bg-primary/10 border border-primary/20 text-primary-foreground rounded-tl-none (Use 'Unbounded' for AI name)"
+      }
+    },
+    "ControlBar": {
+      "description": "Floating bar for Mic, Mute, Settings.",
+      "style": "Glassmorphism pill shape, fixed at bottom center."
+    }
+  },
+  "libraries": {
+    "voice_visualization": "react-voice-visualizer",
+    "animations": "framer-motion",
+    "icons": "lucide-react",
+    "ui_primitives": "shadcn/ui (radix-ui)",
+    "styling": "tailwindcss",
+    "utils": "clsx, tailwind-merge"
+  },
+  "instructions_to_main_agent": [
+    "FORCE DARK MODE: Ensure the 'dark' class is always applied to the root/body.",
+    "Use 'Unbounded' font for all Headings and the AI's name.",
+    "Implement the 'VoiceOrb' as the focal point of the idle screen.",
+    "Use 'react-voice-visualizer' for the active speaking state.",
+    "Ensure high contrast for text (Gray 200 on Black).",
+    "Add 'data-testid' to all interactive elements.",
+    "Do not use generic gradients. Use the defined 'primary_glow' or 'toxic_glow' sparingly.",
+    "The personality is 'Sarcastic/Dark'. UI copy should reflect this (e.g., instead of 'Settings', maybe 'Neural Config')."
+  ],
+  "universal_guidelines": [
+    "Avoid 'AI slop' aesthetics (generic centered layouts, boring gradients).",
+    "Use 2-3x more spacing than typical.",
+    "Micro-animations for every interaction (hover, click, focus).",
+    "Never use transparent backgrounds without blur/scrim.",
+    "Use 'sonner' for toasts."
+  ]
+}
