@@ -373,7 +373,7 @@ async def get_avatar_presets():
 async def create_avatar_preset(preset: AvatarPreset):
     """Save an avatar preset"""
     doc = preset.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
+    doc['created_at'] = datetime.now(timezone.utc).isoformat()
     result = await db.avatar_presets.insert_one(doc)
     # Remove the MongoDB ObjectId before returning
     doc.pop('_id', None)
