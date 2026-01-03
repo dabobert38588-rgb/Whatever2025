@@ -21,9 +21,8 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Ollama configuration
-OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
-OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'qwen3')
+# OpenAI configuration via Emergent
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
 # Anjhelika's personality system prompt
 def get_personality_prompt(personality: dict = None):
@@ -137,40 +136,52 @@ class ChatResponse(BaseModel):
     mood: str = "neutral"
 
 
-# Helper function to call Ollama
-async def call_ollama(messages: List[dict], personality: dict = None) -> str:
-    """Call Ollama API with conversation history"""
+# Helper function to call OpenAI via Emergent
+async def call_openai(messages: List[dict], personality: dict = None) -> str:
+    """Call OpenAI API with conversation history using emergentintegrations"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            # Prepare messages with dynamic system prompt
-            system_prompt = get_personality_prompt(personality)
-            full_messages = [
-                {"role": "system", "content": system_prompt}
-            ] + messages
-            
-            response = await client.post(
-                f"{OLLAMA_URL}/api/chat",
-                json={
-                    "model": OLLAMA_MODEL,
-                    "messages": full_messages,
-                    "stream": False
-                }
-            )
-            
-            if response.status_code != 200:
-                logging.error(f"Ollama error: {response.text}")
-                raise HTTPException(status_code=502, detail="Failed to get response from Ollama")
-            
-            data = response.json()
-            return data.get("message", {}).get("content", "")
-            
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="Ollama request timed out")
-    except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="Cannot connect to Ollama. Make sure it's running locally.")
+        # Get the system prompt
+        system_prompt = get_personality_prompt(personality)
+        
+        # Create a unique session ID for this conversation
+        session_id = f"anjhelika-{uuid.uuid4().hex[:8]}"
+        
+        # Initialize the chat
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=session_id,
+            system_message=system_prompt
+        ).with_model("openai", "gpt-5.2")
+        
+        # Build the conversation history as a single context
+        # Only send the last user message, but include recent history in context
+        history_context = ""
+        if len(messages) > 1:
+            recent_messages = messages[-10:-1]  # Last 10 messages excluding current
+            for msg in recent_messages:
+                role = "User" if msg["role"] == "user" else "Anjhelika"
+                history_context += f"{role}: {msg['content']}\n"
+        
+        # Get the latest user message
+        latest_message = messages[-1]["content"] if messages else ""
+        
+        # Combine history with current message
+        if history_context:
+            full_message = f"Previous conversation:\n{history_context}\nNow respond to: {latest_message}"
+        else:
+            full_message = latest_message
+        
+        # Create user message and send
+        user_message = UserMessage(text=full_message)
+        response = await chat.send_message(user_message)
+        
+        return response
+        
     except Exception as e:
-        logging.error(f"Ollama error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Ollama error: {str(e)}")
+        logging.error(f"OpenAI error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
 
 
 # Routes
@@ -181,22 +192,12 @@ async def root():
 
 @api_router.get("/health")
 async def health_check():
-    """Check if Ollama is available"""
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(f"{OLLAMA_URL}/api/tags")
-            ollama_status = "connected" if response.status_code == 200 else "error"
-            models = response.json().get("models", []) if response.status_code == 200 else []
-            model_names = [m.get("name", "") for m in models]
-    except Exception as e:
-        ollama_status = "disconnected"
-        model_names = []
-    
+    """Check API status"""
     return {
         "status": "healthy",
-        "ollama": ollama_status,
-        "available_models": model_names,
-        "configured_model": OLLAMA_MODEL
+        "ai_provider": "openai",
+        "model": "gpt-5.2",
+        "api_key_configured": bool(EMERGENT_LLM_KEY)
     }
 
 
@@ -235,8 +236,8 @@ async def chat(request: ChatRequest):
         for m in messages[-20:]
     ]
     
-    # Get response from Ollama
-    ai_response = await call_ollama(ollama_messages, request.personality)
+    # Get response from OpenAI
+    ai_response = await call_openai(ollama_messages, request.personality)
     
     # Extract mood from response
     mood = "neutral"
