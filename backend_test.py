@@ -83,18 +83,30 @@ class AnjelikaAPITester:
         return success, response
 
     def test_chat_endpoint(self):
-        """Test chat endpoint - expected to fail without Ollama"""
+        """Test chat endpoint with OpenAI GPT-5.2"""
         success, response = self.run_test(
-            "Chat Endpoint (Expected to fail without Ollama)",
+            "Chat Endpoint (OpenAI GPT-5.2)",
             "POST",
             "chat",
-            503,  # Expected to fail with 503 (service unavailable)
-            data={"message": "Hello Anjhelika"}
+            200,  # Should work with OpenAI
+            data={"message": "Hello Anjhelika, test message"},
+            timeout=30  # Longer timeout for AI response
         )
-        # For this test, we expect it to fail, so we'll count it as passed if it fails with expected error
-        if not success and response == {}:
-            print("   ✅ Expected failure - Ollama not available in cloud environment")
-            return True, response
+        if success:
+            # Check response structure
+            if 'response' in response and 'conversation_id' in response:
+                print("   ✅ Chat response structure is correct")
+                print(f"   📝 Response preview: {response.get('response', '')[:100]}...")
+                print(f"   🆔 Conversation ID: {response.get('conversation_id', '')[:20]}...")
+                
+                # Check if mood is extracted
+                mood = response.get('mood', 'neutral')
+                print(f"   😊 Mood detected: {mood}")
+                
+                return True, response
+            else:
+                print("   ❌ Response missing required fields")
+                return False, response
         return success, response
 
     def test_chat_with_personality(self):
