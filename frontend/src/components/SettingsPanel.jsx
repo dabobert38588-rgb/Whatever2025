@@ -237,7 +237,7 @@ const SettingsPanel = ({
 
             <ScrollArea className="flex-1">
               <div className="p-6 space-y-6">
-                {/* Ollama Status */}
+                {/* AI Status */}
                 <div className="space-y-3 p-4 rounded-lg bg-card border border-border">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     AI Core Status
@@ -245,13 +245,13 @@ const SettingsPanel = ({
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${ollamaStatus === 'connected' ? 'bg-secondary neon-secondary' : 'bg-destructive'}`} />
                     <span className="text-sm">
-                      Ollama: <span className={ollamaStatus === 'connected' ? 'text-secondary' : 'text-destructive'}>
+                      OpenAI: <span className={ollamaStatus === 'connected' ? 'text-secondary' : 'text-destructive'}>
                         {ollamaStatus === 'connected' ? 'Online' : 'Offline'}
                       </span>
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground font-mono">
-                    Model: {ollamaModel || 'qwen3:1.7b'}
+                    Model: {ollamaModel || 'gpt-5.2'}
                   </div>
                 </div>
 
