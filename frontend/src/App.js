@@ -2,18 +2,21 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Menu, Radio } from 'lucide-react';
 
 import VoiceOrb from './components/VoiceOrb';
 import ChatMessage from './components/ChatMessage';
 import ControlBar from './components/ControlBar';
 import SettingsPanel from './components/SettingsPanel';
+import AnimatedAvatar from './components/AnimatedAvatar';
+import ConversationSidebar from './components/ConversationSidebar';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { ScrollArea } from './components/ui/scroll-area';
 
 import useSpeechRecognition from './hooks/useSpeechRecognition';
 import useSpeechSynthesis from './hooks/useSpeechSynthesis';
+import useWakeWord from './hooks/useWakeWord';
 
 import './App.css';
 
@@ -27,12 +30,16 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [ollamaStatus, setOllamaStatus] = useState('checking');
   const [ollamaModel, setOllamaModel] = useState('');
   const [speechRate, setSpeechRate] = useState(1.0);
   const [speechPitch, setSpeechPitch] = useState(1.0);
   const [currentSpeakingId, setCurrentSpeakingId] = useState(null);
+  const [currentMood, setCurrentMood] = useState('neutral');
+  const [conversations, setConversations] = useState([]);
+  const [wakeWordEnabled, setWakeWordEnabled] = useState(false);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -58,6 +65,33 @@ function App() {
     setSelectedVoiceIndex
   } = useSpeechSynthesis();
 
+  // Wake word handler
+  const handleWakeWordDetected = useCallback(() => {
+    toast.success("Hey! I'm listening...", { duration: 2000 });
+    startListening();
+  }, [startListening]);
+
+  const {
+    isListeningForWakeWord,
+    isEnabled: wakeWordActive,
+    startListening: startWakeWord,
+    stopListening: stopWakeWord,
+    pauseTemporarily: pauseWakeWord
+  } = useWakeWord('hey anjhelika', handleWakeWordDetected);
+
+  // Toggle wake word
+  const toggleWakeWord = useCallback(() => {
+    if (wakeWordActive) {
+      stopWakeWord();
+      setWakeWordEnabled(false);
+      toast.info('Wake word disabled');
+    } else {
+      startWakeWord();
+      setWakeWordEnabled(true);
+      toast.success('Say "Hey Anjhelika" to start chatting!');
+    }
+  }, [wakeWordActive, startWakeWord, stopWakeWord]);
+
   // Determine orb state
   const getOrbState = () => {
     if (listening) return 'listening';
@@ -78,7 +112,7 @@ function App() {
     }
   }, [transcript]);
 
-  // Check Ollama status on mount
+  // Check Ollama status and load conversations on mount
   useEffect(() => {
     const checkHealth = async () => {
       try {
@@ -97,12 +131,44 @@ function App() {
       }
     };
     
+    const loadConversations = async () => {
+      try {
+        const response = await axios.get(`${API}/conversations`);
+        setConversations(response.data.conversations || []);
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+    };
+    
     checkHealth();
+    loadConversations();
+  }, []);
+
+  // Load conversation messages
+  const loadConversation = useCallback(async (convId) => {
+    try {
+      const response = await axios.get(`${API}/conversations/${convId}`);
+      setMessages(response.data.messages || []);
+      setConversationId(convId);
+      
+      // Get last mood from messages
+      const lastAiMessage = [...(response.data.messages || [])].reverse().find(m => m.role === 'assistant');
+      if (lastAiMessage?.mood) {
+        setCurrentMood(lastAiMessage.mood);
+      }
+    } catch (error) {
+      toast.error('Failed to load conversation');
+    }
   }, []);
 
   // Send message function
   const sendMessage = useCallback(async (messageText) => {
     if (!messageText?.trim() || isLoading) return;
+
+    // Pause wake word while processing
+    if (wakeWordActive) {
+      pauseWakeWord(10000);
+    }
 
     const userMessage = {
       id: Date.now().toString(),
@@ -115,6 +181,7 @@ function App() {
     setInputValue('');
     resetTranscript();
     setIsLoading(true);
+    setCurrentMood('thinking');
 
     try {
       const response = await axios.post(`${API}/chat`, {
@@ -126,11 +193,32 @@ function App() {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: response.data.response,
+        mood: response.data.mood,
         timestamp: new Date().toISOString()
       };
 
       setMessages(prev => [...prev, aiMessage]);
       setConversationId(response.data.conversation_id);
+      setCurrentMood(response.data.mood || 'neutral');
+
+      // Update conversations list
+      setConversations(prev => {
+        const existing = prev.find(c => c.id === response.data.conversation_id);
+        if (existing) {
+          return prev.map(c => 
+            c.id === response.data.conversation_id 
+              ? { ...c, updated_at: new Date().toISOString(), preview: messageText.trim().slice(0, 50) }
+              : c
+          );
+        } else {
+          return [{ 
+            id: response.data.conversation_id, 
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            preview: messageText.trim().slice(0, 50)
+          }, ...prev];
+        }
+      });
 
       // Speak the response if not muted
       if (!isMuted && ttsSupported) {
@@ -141,15 +229,15 @@ function App() {
       console.error('Chat error:', error);
       const errorMsg = error.response?.data?.detail || 'Failed to get response from Anjhelika';
       toast.error(errorMsg);
+      setCurrentMood('concerned');
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript]);
+  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript, wakeWordActive, pauseWakeWord]);
 
   // Handle voice input completion
   useEffect(() => {
     if (!listening && transcript && transcript.trim()) {
-      // Small delay to ensure transcript is final
       const timer = setTimeout(() => {
         sendMessage(transcript);
       }, 500);
@@ -172,6 +260,9 @@ function App() {
       if (speaking) {
         stopSpeaking();
       }
+      if (wakeWordActive) {
+        pauseWakeWord(10000);
+      }
       startListening();
     }
   };
@@ -183,6 +274,9 @@ function App() {
     } else if (speaking) {
       stopSpeaking();
     } else {
+      if (wakeWordActive) {
+        pauseWakeWord(10000);
+      }
       startListening();
     }
   };
@@ -209,14 +303,48 @@ function App() {
     if (conversationId) {
       try {
         await axios.delete(`${API}/conversations/${conversationId}`);
+        setConversations(prev => prev.filter(c => c.id !== conversationId));
       } catch (error) {
         console.error('Failed to delete conversation:', error);
       }
     }
     setMessages([]);
     setConversationId(null);
+    setCurrentMood('neutral');
     stopSpeaking();
     toast.success('Conversation cleared. Fresh start, darling.');
+  };
+
+  // New conversation
+  const handleNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setCurrentMood('neutral');
+    setShowSidebar(false);
+  };
+
+  // Select conversation
+  const handleSelectConversation = (convId) => {
+    loadConversation(convId);
+    setShowSidebar(false);
+  };
+
+  // Delete conversation from sidebar
+  const handleDeleteConversation = async (convId) => {
+    try {
+      await axios.delete(`${API}/conversations/${convId}`);
+      setConversations(prev => prev.filter(c => c.id !== convId));
+      
+      if (conversationId === convId) {
+        setMessages([]);
+        setConversationId(null);
+        setCurrentMood('neutral');
+      }
+      
+      toast.success('Conversation deleted');
+    } catch (error) {
+      toast.error('Failed to delete conversation');
+    }
   };
 
   const hasMessages = messages.length > 0;
@@ -240,51 +368,82 @@ function App() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
       </div>
 
+      {/* Conversation Sidebar */}
+      <ConversationSidebar
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        conversations={conversations}
+        currentConversationId={conversationId}
+        onSelectConversation={handleSelectConversation}
+        onNewConversation={handleNewConversation}
+        onDeleteConversation={handleDeleteConversation}
+      />
+
       {/* Main content */}
       <div className="relative z-10 flex flex-col h-screen">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 text-center"
+          className="p-4 flex items-center justify-between"
         >
-          <h1 
-            className="text-3xl md:text-4xl font-bold text-gradient-primary"
-            style={{ fontFamily: 'Unbounded, sans-serif' }}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSidebar(true)}
+            className="rounded-full"
+            data-testid="open-sidebar-btn"
           >
-            Anjhelika
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Your sarcastic AI companion with a heart of... well, code.
-          </p>
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          <div className="text-center">
+            <h1 
+              className="text-2xl md:text-3xl font-bold text-gradient-primary"
+              style={{ fontFamily: 'Unbounded, sans-serif' }}
+            >
+              Anjhelika
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {ollamaStatus === 'connected' ? 'Online' : 'Offline'} • {ollamaModel || 'qwen3:1.7b'}
+            </p>
+          </div>
+          
+          <Button
+            variant={wakeWordActive ? 'default' : 'ghost'}
+            size="icon"
+            onClick={toggleWakeWord}
+            className={`rounded-full ${wakeWordActive ? 'neon-secondary' : ''}`}
+            data-testid="wake-word-toggle"
+            title={wakeWordActive ? 'Wake word active' : 'Enable wake word'}
+          >
+            <Radio className={`h-5 w-5 ${wakeWordActive ? 'text-secondary animate-pulse' : ''}`} />
+          </Button>
         </motion.header>
 
         {/* Chat area */}
         <div className="flex-1 flex flex-col items-center justify-center px-4 pb-32">
           <AnimatePresence mode="wait">
             {!hasMessages ? (
-              /* Idle state with orb */
+              /* Idle state with avatar */
               <motion.div
                 key="idle"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex flex-col items-center gap-8"
+                className="flex flex-col items-center gap-6"
               >
-                {/* Avatar */}
+                {/* Animated Avatar */}
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="relative"
                 >
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/30 neon-primary">
-                    <img
-                      src="https://images.unsplash.com/photo-1634910440823-193b061d28a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjB3b21hbiUyMHBvcnRyYWl0JTIwbmVvbnxlbnwwfHx8fDE3Njc0MTExMjF8MA&ixlib=rb-4.1.0&q=85&w=300"
-                      alt="Anjhelika"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <AnimatedAvatar 
+                    mood={currentMood} 
+                    isSpeaking={speaking}
+                    size={140}
+                  />
                 </motion.div>
 
                 {/* Voice Orb */}
@@ -293,6 +452,18 @@ function App() {
                   onClick={handleOrbClick}
                   size="lg"
                 />
+
+                {/* Wake word status */}
+                {wakeWordActive && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 text-secondary text-sm"
+                  >
+                    <Radio className="h-4 w-4 animate-pulse" />
+                    <span>Listening for "Hey Anjhelika"...</span>
+                  </motion.div>
+                )}
 
                 {/* Greeting */}
                 <motion.p
@@ -308,7 +479,7 @@ function App() {
                   )}
                 </motion.p>
 
-                {/* Text input for non-voice */}
+                {/* Text input */}
                 <form onSubmit={handleSubmit} className="w-full max-w-md">
                   <div className="flex gap-2">
                     <Input
@@ -336,12 +507,9 @@ function App() {
                 </form>
 
                 {/* Status indicators */}
-                {!sttSupported && (
-                  <p className="text-xs text-destructive">Speech recognition not supported</p>
-                )}
                 {ollamaStatus !== 'connected' && (
                   <p className="text-xs text-destructive">
-                    Ollama disconnected - Start Ollama to chat
+                    Ollama disconnected - Run: ollama serve
                   </p>
                 )}
               </motion.div>
@@ -353,8 +521,13 @@ function App() {
                 animate={{ opacity: 1 }}
                 className="w-full max-w-2xl flex flex-col h-full"
               >
-                {/* Small orb indicator */}
-                <div className="flex justify-center mb-4">
+                {/* Header with small avatar */}
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <AnimatedAvatar 
+                    mood={currentMood} 
+                    isSpeaking={speaking}
+                    size={64}
+                  />
                   <VoiceOrb
                     state={getOrbState()}
                     onClick={handleOrbClick}
