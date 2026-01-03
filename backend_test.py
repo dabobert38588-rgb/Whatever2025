@@ -128,6 +128,143 @@ class AnjelikaAPITester:
         )
         return success, response
 
+    def test_personality_presets_endpoint(self):
+        """Test personality presets endpoint"""
+        success, response = self.run_test(
+            "Get Personality Presets",
+            "GET",
+            "presets/personality",
+            200
+        )
+        if success:
+            # Check if default presets are returned
+            default_presets = response.get('default', [])
+            if len(default_presets) == 6:
+                print(f"   ✅ Found {len(default_presets)} default personality presets")
+                # Check for specific presets
+                preset_names = [p.get('name') for p in default_presets]
+                expected_presets = ['Tough Love', 'Sweetheart', 'Full Sass', 'Chill Vibes', 'Chaos Gremlin', 'Comfort Mode']
+                for expected in expected_presets:
+                    if expected in preset_names:
+                        print(f"   ✅ Found preset: {expected}")
+                    else:
+                        print(f"   ❌ Missing preset: {expected}")
+            else:
+                print(f"   ❌ Expected 6 default presets, got {len(default_presets)}")
+        return success, response
+
+    def test_avatar_presets_endpoint(self):
+        """Test avatar presets endpoint"""
+        success, response = self.run_test(
+            "Get Avatar Presets",
+            "GET",
+            "presets/avatar",
+            200
+        )
+        if success:
+            presets = response.get('presets', [])
+            print(f"   ✅ Avatar presets endpoint working, found {len(presets)} saved presets")
+        return success, response
+
+    def test_mood_journal_endpoint(self):
+        """Test mood journal endpoint"""
+        success, response = self.run_test(
+            "Get Mood Journal",
+            "GET",
+            "mood-journal",
+            200
+        )
+        if success:
+            # Check required fields
+            required_fields = ['total_responses', 'mood_stats', 'recent_moods', 'commentary', 'generated_at']
+            for field in required_fields:
+                if field in response:
+                    print(f"   ✅ Found required field: {field}")
+                else:
+                    print(f"   ❌ Missing required field: {field}")
+            
+            # Check data structure
+            total_responses = response.get('total_responses', 0)
+            mood_stats = response.get('mood_stats', {})
+            print(f"   📊 Total responses: {total_responses}")
+            print(f"   📊 Mood types tracked: {len(mood_stats)}")
+        return success, response
+
+    def test_create_personality_preset(self):
+        """Test creating a custom personality preset"""
+        test_preset = {
+            "name": "Test Preset",
+            "sarcasm": 75,
+            "sweetness": 60,
+            "icon": "🧪"
+        }
+        success, response = self.run_test(
+            "Create Personality Preset",
+            "POST",
+            "presets/personality",
+            200,
+            data=test_preset
+        )
+        if success:
+            print(f"   ✅ Successfully created test personality preset")
+            # Store the ID for cleanup
+            preset_id = response.get('preset', {}).get('id')
+            return success, response, preset_id
+        return success, response, None
+
+    def test_create_avatar_preset(self):
+        """Test creating an avatar preset"""
+        test_avatar = {
+            "name": "Test Avatar",
+            "customization": {
+                "skin": "medium",
+                "hair": "brown",
+                "eyes": "green",
+                "accessory": "silver"
+            }
+        }
+        success, response = self.run_test(
+            "Create Avatar Preset",
+            "POST",
+            "presets/avatar",
+            200,
+            data=test_avatar
+        )
+        if success:
+            print(f"   ✅ Successfully created test avatar preset")
+            # Store the ID for cleanup
+            preset_id = response.get('preset', {}).get('id')
+            return success, response, preset_id
+        return success, response, None
+
+    def test_delete_personality_preset(self, preset_id):
+        """Test deleting a personality preset"""
+        if not preset_id:
+            print("   ⚠️  No preset ID to delete")
+            return True, {}
+        
+        success, response = self.run_test(
+            "Delete Personality Preset",
+            "DELETE",
+            f"presets/personality/{preset_id}",
+            200
+        )
+        return success, response
+
+    def test_delete_avatar_preset(self, preset_id):
+        """Test deleting an avatar preset"""
+        if not preset_id:
+            print("   ⚠️  No preset ID to delete")
+            return True, {}
+        
+        success, response = self.run_test(
+            "Delete Avatar Preset",
+            "DELETE",
+            f"presets/avatar/{preset_id}",
+            200
+        )
+        return success, response
+
 def main():
     print("🚀 Starting Anjhelika API Tests...")
     print("=" * 50)
