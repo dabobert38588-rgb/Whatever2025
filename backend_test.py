@@ -70,6 +70,34 @@ class AnjelikaAPITester:
             "health",
             200
         )
+        if success:
+            # Check if it returns OpenAI as provider
+            ai_provider = response.get('ai_provider')
+            model = response.get('model')
+            api_key_configured = response.get('api_key_configured')
+            
+            if ai_provider == 'openai':
+                print("   ✅ AI provider correctly set to 'openai'")
+            else:
+                print(f"   ❌ Expected ai_provider 'openai', got '{ai_provider}'")
+                
+            if model == 'gpt-5.2':
+                print("   ✅ Model correctly set to 'gpt-5.2'")
+            else:
+                print(f"   ❌ Expected model 'gpt-5.2', got '{model}'")
+                
+            if api_key_configured:
+                print("   ✅ API key is configured")
+            else:
+                print("   ❌ API key is not configured")
+                
+            # Overall success if all checks pass
+            if ai_provider == 'openai' and model == 'gpt-5.2' and api_key_configured:
+                print("   ✅ Health endpoint shows correct OpenAI GPT-5.2 configuration")
+                return True, response
+            else:
+                print("   ❌ Health endpoint configuration issues detected")
+                return False, response
         return success, response
 
     def test_root_endpoint(self):
