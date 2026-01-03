@@ -84,6 +84,15 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
   - Sarcastic AI commentary (e.g., "I've rolled my eyes 47 times")
   - Bottom sheet panel with refresh button
 
+### Phase 5 - Adult Mode (January 3, 2025)
+- **Adult Mode Toggle**:
+  - Off by default with clear toggle in Personality tab
+  - Age verification dialog (18+ confirmation required)
+  - NSFW warning indicator when enabled
+  - Modifies AI personality to allow explicit content
+  - New "flirty" mood (😘) for appropriate responses
+  - Maintains sarcastic personality even in intimate moments
+
 ## Tech Stack
 - Frontend: React 19, TailwindCSS, Framer Motion, shadcn/ui
 - Backend: FastAPI, Motor (async MongoDB), httpx (Ollama client)
