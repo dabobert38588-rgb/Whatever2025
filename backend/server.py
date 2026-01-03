@@ -302,6 +302,170 @@ async def clear_all_conversations():
     return {"message": f"Deleted {result.deleted_count} conversations"}
 
 
+# ============ PRESETS ============
+
+class AvatarPreset(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    customization: dict  # {skin, hair, eyes, accessory}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class PersonalityPreset(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    sarcasm: int
+    sweetness: int
+    icon: str = "✨"
+
+
+# Default personality presets
+DEFAULT_PERSONALITY_PRESETS = [
+    {"id": "tough-love", "name": "Tough Love", "sarcasm": 80, "sweetness": 70, "icon": "💪"},
+    {"id": "sweetheart", "name": "Sweetheart", "sarcasm": 30, "sweetness": 90, "icon": "💕"},
+    {"id": "full-sass", "name": "Full Sass", "sarcasm": 100, "sweetness": 40, "icon": "💅"},
+    {"id": "chill-vibes", "name": "Chill Vibes", "sarcasm": 40, "sweetness": 50, "icon": "😎"},
+    {"id": "chaos-gremlin", "name": "Chaos Gremlin", "sarcasm": 95, "sweetness": 20, "icon": "😈"},
+    {"id": "comfort-mode", "name": "Comfort Mode", "sarcasm": 20, "sweetness": 95, "icon": "🤗"},
+]
+
+
+@api_router.get("/presets/personality")
+async def get_personality_presets():
+    """Get all personality presets (default + custom)"""
+    custom_presets = await db.personality_presets.find({}, {"_id": 0}).to_list(100)
+    return {
+        "default": DEFAULT_PERSONALITY_PRESETS,
+        "custom": custom_presets
+    }
+
+
+@api_router.post("/presets/personality")
+async def create_personality_preset(preset: PersonalityPreset):
+    """Create a custom personality preset"""
+    doc = preset.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.personality_presets.insert_one(doc)
+    return {"message": "Preset created", "preset": doc}
+
+
+@api_router.delete("/presets/personality/{preset_id}")
+async def delete_personality_preset(preset_id: str):
+    """Delete a custom personality preset"""
+    result = await db.personality_presets.delete_one({"id": preset_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Preset not found")
+    return {"message": "Preset deleted"}
+
+
+@api_router.get("/presets/avatar")
+async def get_avatar_presets():
+    """Get all saved avatar presets"""
+    presets = await db.avatar_presets.find({}, {"_id": 0}).to_list(100)
+    return {"presets": presets}
+
+
+@api_router.post("/presets/avatar")
+async def create_avatar_preset(preset: AvatarPreset):
+    """Save an avatar preset"""
+    doc = preset.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.avatar_presets.insert_one(doc)
+    return {"message": "Avatar preset saved", "preset": doc}
+
+
+@api_router.delete("/presets/avatar/{preset_id}")
+async def delete_avatar_preset(preset_id: str):
+    """Delete an avatar preset"""
+    result = await db.avatar_presets.delete_one({"id": preset_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Preset not found")
+    return {"message": "Avatar preset deleted"}
+
+
+# ============ MOOD JOURNAL ============
+
+@api_router.get("/mood-journal")
+async def get_mood_journal():
+    """Get mood statistics from all conversations"""
+    # Aggregate mood counts from all messages
+    pipeline = [
+        {"$unwind": "$messages"},
+        {"$match": {"messages.role": "assistant", "messages.mood": {"$exists": True}}},
+        {"$group": {
+            "_id": "$messages.mood",
+            "count": {"$sum": 1},
+            "last_occurrence": {"$max": "$messages.timestamp"}
+        }},
+        {"$sort": {"count": -1}}
+    ]
+    
+    mood_stats = await db.conversations.aggregate(pipeline).to_list(100)
+    
+    # Get total message count
+    total_pipeline = [
+        {"$unwind": "$messages"},
+        {"$match": {"messages.role": "assistant"}},
+        {"$count": "total"}
+    ]
+    total_result = await db.conversations.aggregate(total_pipeline).to_list(1)
+    total_messages = total_result[0]["total"] if total_result else 0
+    
+    # Get recent moods (last 20 messages)
+    recent_pipeline = [
+        {"$unwind": "$messages"},
+        {"$match": {"messages.role": "assistant", "messages.mood": {"$exists": True}}},
+        {"$sort": {"messages.timestamp": -1}},
+        {"$limit": 20},
+        {"$project": {
+            "mood": "$messages.mood",
+            "timestamp": "$messages.timestamp",
+            "preview": {"$substr": ["$messages.content", 0, 50]}
+        }}
+    ]
+    recent_moods = await db.conversations.aggregate(recent_pipeline).to_list(20)
+    
+    # Calculate mood percentages
+    mood_percentages = {}
+    for stat in mood_stats:
+        mood = stat["_id"]
+        count = stat["count"]
+        percentage = round((count / total_messages * 100), 1) if total_messages > 0 else 0
+        mood_percentages[mood] = {
+            "count": count,
+            "percentage": percentage,
+            "last_occurrence": stat["last_occurrence"]
+        }
+    
+    # Fun commentary based on top mood
+    commentary = ""
+    if mood_stats:
+        top_mood = mood_stats[0]["_id"]
+        top_count = mood_stats[0]["count"]
+        
+        mood_comments = {
+            "eyeroll": f"I've rolled my eyes {top_count} times. You're really testing my patience, darling.",
+            "smirk": f"{top_count} smirks. We both know I'm always right.",
+            "sassy": f"Sass level: {top_count} instances. You bring out the best in me.",
+            "loving": f"{top_count} loving moments. Don't let it go to your head.",
+            "thinking": f"I've had to think {top_count} times. Your questions are... interesting.",
+            "surprised": f"You've surprised me {top_count} times. Impressive, actually.",
+            "concerned": f"I've been concerned {top_count} times. Please take better care of yourself.",
+            "neutral": f"{top_count} neutral responses. Even I need a break sometimes."
+        }
+        commentary = mood_comments.get(top_mood, f"Top mood: {top_mood} ({top_count} times)")
+    
+    return {
+        "total_responses": total_messages,
+        "mood_stats": mood_percentages,
+        "recent_moods": recent_moods,
+        "commentary": commentary,
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
