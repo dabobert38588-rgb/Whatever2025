@@ -442,6 +442,7 @@ async def get_mood_journal():
         {"$sort": {"messages.timestamp": -1}},
         {"$limit": 20},
         {"$project": {
+            "_id": 0,  # Exclude MongoDB ObjectId
             "mood": "$messages.mood",
             "timestamp": "$messages.timestamp",
             "preview": {"$substr": ["$messages.content", 0, 50]}
