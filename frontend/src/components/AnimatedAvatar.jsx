@@ -52,8 +52,63 @@ const moods = {
   }
 };
 
-const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) => {
+// Customization presets
+const skinTones = {
+  light: { base: '#f5d0c5', shadow: '#e8b4a8' },
+  medium: '#d4a574',
+  olive: '#c4956a',
+  tan: '#a67c52',
+  brown: '#8b6240',
+  dark: '#5c4033'
+};
+
+const hairColors = {
+  black: { main: '#1a1a2e', highlight: '#2d2d44' },
+  brown: { main: '#3d2314', highlight: '#5a3825' },
+  blonde: { main: '#c9a227', highlight: '#e0b830' },
+  red: { main: '#8b2500', highlight: '#a33000' },
+  purple: { main: '#4a1a6b', highlight: '#6b2d8a' },
+  blue: { main: '#1a3a5c', highlight: '#2a5080' },
+  pink: { main: '#d946ef', highlight: '#e879f9' },
+  white: { main: '#e8e8e8', highlight: '#ffffff' }
+};
+
+const eyeColors = {
+  purple: '#8B5CF6',
+  blue: '#3B82F6',
+  green: '#10B981',
+  brown: '#92400E',
+  amber: '#F59E0B',
+  red: '#EF4444',
+  pink: '#EC4899',
+  gray: '#6B7280'
+};
+
+const accessoryColors = {
+  purple: '#D946EF',
+  gold: '#F59E0B',
+  silver: '#9CA3AF',
+  red: '#EF4444',
+  blue: '#3B82F6',
+  green: '#10B981',
+  pink: '#EC4899',
+  none: 'transparent'
+};
+
+const AnimatedAvatar = ({ 
+  mood = 'neutral', 
+  isSpeaking = false, 
+  size = 128,
+  customization = {}
+}) => {
   const currentMood = moods[mood] || moods.neutral;
+  
+  // Get customization values with defaults
+  const skinTone = skinTones[customization.skin || 'light'];
+  const skin = typeof skinTone === 'object' ? skinTone : { base: skinTone, shadow: skinTone };
+  const hair = hairColors[customization.hair || 'black'];
+  const eyes = eyeColors[customization.eyes || 'purple'];
+  const accessory = accessoryColors[customization.accessory || 'purple'];
   
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -79,12 +134,15 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
         
         {/* SVG Face */}
         <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-          {/* Hair */}
-          <ellipse cx="50" cy="35" rx="38" ry="30" fill="#1a1a2e" />
-          <path d="M 15 45 Q 10 30 20 15 Q 50 5 80 15 Q 90 30 85 45" fill="#1a1a2e" />
+          {/* Hair back */}
+          <ellipse cx="50" cy="35" rx="38" ry="30" fill={hair.main} />
+          <path d="M 15 45 Q 10 30 20 15 Q 50 5 80 15 Q 90 30 85 45" fill={hair.main} />
           
           {/* Face */}
-          <ellipse cx="50" cy="50" rx="30" ry="32" fill="#f5d0c5" />
+          <ellipse cx="50" cy="50" rx="30" ry="32" fill={skin.base} />
+          
+          {/* Face shadow */}
+          <ellipse cx="50" cy="55" rx="28" ry="28" fill={skin.shadow} opacity="0.3" />
           
           {/* Blush */}
           <AnimatePresence>
@@ -111,8 +169,8 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
           {/* Left eyebrow */}
           <motion.path
             d="M 28 38 Q 35 35 42 38"
-            stroke="#4a4a4a"
-            strokeWidth="2"
+            stroke={hair.main}
+            strokeWidth="2.5"
             fill="none"
             strokeLinecap="round"
             animate={{ rotate: currentMood.eyebrowRotate }}
@@ -123,8 +181,8 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
           {/* Right eyebrow */}
           <motion.path
             d="M 58 38 Q 65 35 72 38"
-            stroke="#4a4a4a"
-            strokeWidth="2"
+            stroke={hair.main}
+            strokeWidth="2.5"
             fill="none"
             strokeLinecap="round"
             animate={{ rotate: -currentMood.eyebrowRotate }}
@@ -146,7 +204,7 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
             }}
             transition={{ duration: 0.3 }}
           >
-            <circle cx="35" cy="48" r="4" fill="#8B5CF6" />
+            <circle cx="35" cy="48" r="4" fill={eyes} />
             <circle cx="36" cy="47" r="1.5" fill="white" />
           </motion.g>
           
@@ -158,12 +216,18 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
             }}
             transition={{ duration: 0.3 }}
           >
-            <circle cx="65" cy="48" r="4" fill="#8B5CF6" />
+            <circle cx="65" cy="48" r="4" fill={eyes} />
             <circle cx="66" cy="47" r="1.5" fill="white" />
           </motion.g>
           
+          {/* Eyelashes */}
+          <path d="M 27 44 L 25 41" stroke={hair.main} strokeWidth="1" />
+          <path d="M 30 43 L 29 40" stroke={hair.main} strokeWidth="1" />
+          <path d="M 70 43 L 71 40" stroke={hair.main} strokeWidth="1" />
+          <path d="M 73 44 L 75 41" stroke={hair.main} strokeWidth="1" />
+          
           {/* Nose */}
-          <path d="M 50 52 L 48 58 Q 50 60 52 58 L 50 52" fill="#e8b4a8" />
+          <path d="M 50 52 L 48 58 Q 50 60 52 58 L 50 52" fill={skin.shadow} />
           
           {/* Mouth */}
           <motion.path
@@ -192,12 +256,18 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
           )}
           
           {/* Earrings */}
-          <circle cx="18" cy="55" r="3" fill="#D946EF" />
-          <circle cx="82" cy="55" r="3" fill="#D946EF" />
+          {accessory !== 'transparent' && (
+            <>
+              <circle cx="18" cy="55" r="3" fill={accessory} />
+              <circle cx="82" cy="55" r="3" fill={accessory} />
+            </>
+          )}
           
-          {/* Hair strands */}
-          <path d="M 25 25 Q 20 35 25 45" stroke="#2d2d44" strokeWidth="3" fill="none" />
-          <path d="M 75 25 Q 80 35 75 45" stroke="#2d2d44" strokeWidth="3" fill="none" />
+          {/* Hair strands/bangs */}
+          <path d="M 25 25 Q 20 35 25 45" stroke={hair.highlight} strokeWidth="3" fill="none" />
+          <path d="M 75 25 Q 80 35 75 45" stroke={hair.highlight} strokeWidth="3" fill="none" />
+          <path d="M 35 18 Q 33 28 38 35" stroke={hair.highlight} strokeWidth="2" fill="none" />
+          <path d="M 65 18 Q 67 28 62 35" stroke={hair.highlight} strokeWidth="2" fill="none" />
         </svg>
         
         {/* Neon highlight overlay */}
@@ -215,6 +285,14 @@ const AnimatedAvatar = ({ mood = 'neutral', isSpeaking = false, size = 128 }) =>
       </motion.div>
     </div>
   );
+};
+
+// Export customization options for settings
+export const avatarOptions = {
+  skinTones: Object.keys(skinTones),
+  hairColors: Object.keys(hairColors),
+  eyeColors: Object.keys(eyeColors),
+  accessoryColors: Object.keys(accessoryColors)
 };
 
 export default AnimatedAvatar;
