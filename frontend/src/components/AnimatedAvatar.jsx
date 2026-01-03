@@ -49,6 +49,12 @@ const moods = {
     mouthPath: "M 38 68 Q 50 62 62 68",
     eyebrowRotate: 8,
     blush: false
+  },
+  flirty: {
+    eyePosition: { x: 2, y: 0 },
+    mouthPath: "M 35 60 Q 50 72 65 60",
+    eyebrowRotate: -6,
+    blush: true
   }
 };
 
