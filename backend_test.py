@@ -337,6 +337,11 @@ def main():
     # Test chat with personality parameters
     personality_success, personality_response = tester.test_chat_with_personality()
     
+    # Test adult mode functionality
+    print("\n🔥 Testing Adult Mode Feature...")
+    adult_mode_enabled_success, adult_mode_enabled_response = tester.test_chat_with_adult_mode()
+    adult_mode_disabled_success, adult_mode_disabled_response = tester.test_chat_with_adult_mode_disabled()
+    
     # Test conversations endpoint
     conversations_success, conversations_response = tester.test_conversations_endpoint()
 
