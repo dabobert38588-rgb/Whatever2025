@@ -408,6 +408,10 @@ def main():
         new_features_working.append("✅ Personality preset CRUD operations working")
     if create_avatar_success and delete_avatar_success:
         new_features_working.append("✅ Avatar preset CRUD operations working")
+    if adult_mode_enabled_success:
+        new_features_working.append("✅ Adult mode enabled parameter accepted by backend")
+    if adult_mode_disabled_success:
+        new_features_working.append("✅ Adult mode disabled parameter accepted by backend")
     
     if critical_failures:
         print(f"\n🚨 Critical Issues Found:")
