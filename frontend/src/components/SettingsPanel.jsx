@@ -274,6 +274,30 @@ const SettingsPanel = ({
 
                   {/* Personality Tab */}
                   <TabsContent value="personality" className="space-y-6 mt-4">
+                    {/* Adult Mode Toggle */}
+                    <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Flame className={`h-5 w-5 ${adultMode ? 'text-destructive' : 'text-muted-foreground'}`} />
+                          <div>
+                            <Label className="text-sm font-semibold">Adult Mode</Label>
+                            <p className="text-xs text-muted-foreground">Enable explicit content</p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={adultMode}
+                          onCheckedChange={handleAdultModeToggle}
+                          data-testid="adult-mode-toggle"
+                        />
+                      </div>
+                      {adultMode && (
+                        <p className="text-xs text-destructive mt-2 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          NSFW content enabled - Anjhelika is feeling spicy
+                        </p>
+                      )}
+                    </div>
+
                     {/* Quick Presets */}
                     <div className="space-y-3">
                       <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -649,6 +673,37 @@ const SettingsPanel = ({
                 </div>
               </div>
             </ScrollArea>
+
+            {/* Adult Mode Confirmation Dialog */}
+            <AlertDialog open={showAdultConfirm} onOpenChange={setShowAdultConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-destructive" />
+                    Enable Adult Mode?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <p>This will enable explicit and NSFW content in conversations with Anjhelika.</p>
+                    <p className="font-semibold">By enabling this, you confirm that:</p>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      <li>You are 18 years or older</li>
+                      <li>This is for personal use only</li>
+                      <li>You accept responsibility for the content</li>
+                    </ul>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={confirmAdultMode}
+                    className="bg-destructive hover:bg-destructive/90"
+                    data-testid="confirm-adult-mode"
+                  >
+                    I'm 18+, Enable
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </motion.div>
         </>
       )}
