@@ -40,6 +40,14 @@ function App() {
   const [currentMood, setCurrentMood] = useState('neutral');
   const [conversations, setConversations] = useState([]);
   const [wakeWordEnabled, setWakeWordEnabled] = useState(false);
+  const [sarcasmLevel, setSarcasmLevel] = useState(70);
+  const [sweetnessLevel, setSweetnessLevel] = useState(50);
+  const [avatarCustomization, setAvatarCustomization] = useState({
+    skin: 'light',
+    hair: 'black',
+    eyes: 'purple',
+    accessory: 'purple'
+  });
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -186,7 +194,11 @@ function App() {
     try {
       const response = await axios.post(`${API}/chat`, {
         message: messageText.trim(),
-        conversation_id: conversationId
+        conversation_id: conversationId,
+        personality: {
+          sarcasm: sarcasmLevel,
+          sweetness: sweetnessLevel
+        }
       });
 
       const aiMessage = {
@@ -233,7 +245,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript, wakeWordActive, pauseWakeWord]);
+  }, [conversationId, isLoading, isMuted, ttsSupported, speak, speechRate, speechPitch, resetTranscript, wakeWordActive, pauseWakeWord, sarcasmLevel, sweetnessLevel]);
 
   // Handle voice input completion
   useEffect(() => {
@@ -443,6 +455,7 @@ function App() {
                     mood={currentMood} 
                     isSpeaking={speaking}
                     size={140}
+                    customization={avatarCustomization}
                   />
                 </motion.div>
 
@@ -527,6 +540,7 @@ function App() {
                     mood={currentMood} 
                     isSpeaking={speaking}
                     size={64}
+                    customization={avatarCustomization}
                   />
                   <VoiceOrb
                     state={getOrbState()}
@@ -629,6 +643,12 @@ function App() {
         onSpeechPitchChange={setSpeechPitch}
         ollamaStatus={ollamaStatus}
         ollamaModel={ollamaModel}
+        sarcasmLevel={sarcasmLevel}
+        onSarcasmChange={setSarcasmLevel}
+        sweetnessLevel={sweetnessLevel}
+        onSweetnessChange={setSweetnessLevel}
+        avatarCustomization={avatarCustomization}
+        onAvatarCustomizationChange={setAvatarCustomization}
       />
     </div>
   );
