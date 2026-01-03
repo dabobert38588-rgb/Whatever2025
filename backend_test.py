@@ -135,22 +135,22 @@ class AnjelikaAPITester:
     def test_chat_with_adult_mode(self):
         """Test chat endpoint with adult mode enabled"""
         success, response = self.run_test(
-            "Chat with Adult Mode Enabled (Expected to fail without Ollama)",
+            "Chat with Adult Mode Enabled (OpenAI GPT-5.2)",
             "POST",
             "chat",
-            503,  # Expected to fail with 503 (service unavailable)
+            200,  # Should work with OpenAI
             data={
-                "message": "Hello Anjhelika",
+                "message": "Test adult mode functionality",
                 "personality": {
                     "sarcasm": 70,
                     "sweetness": 50,
                     "adultMode": True
                 }
-            }
+            },
+            timeout=30
         )
-        # For this test, we expect it to fail, so we'll count it as passed if it fails with expected error
-        if not success and response == {}:
-            print("   ✅ Expected failure - Ollama not available, but adultMode parameter accepted")
+        if success:
+            print("   ✅ Adult mode parameter accepted and processed")
             return True, response
         return success, response
 
