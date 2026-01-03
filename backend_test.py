@@ -290,6 +290,32 @@ def main():
     # Test conversations endpoint
     conversations_success, conversations_response = tester.test_conversations_endpoint()
 
+    # Test new preset endpoints
+    print("\n🎭 Testing Personality Presets...")
+    presets_success, presets_response = tester.test_personality_presets_endpoint()
+    
+    print("\n🎨 Testing Avatar Presets...")
+    avatar_presets_success, avatar_presets_response = tester.test_avatar_presets_endpoint()
+    
+    print("\n📊 Testing Mood Journal...")
+    mood_journal_success, mood_journal_response = tester.test_mood_journal_endpoint()
+
+    # Test CRUD operations for presets
+    print("\n🧪 Testing Preset CRUD Operations...")
+    create_personality_success, create_personality_response, personality_preset_id = tester.test_create_personality_preset()
+    create_avatar_success, create_avatar_response, avatar_preset_id = tester.test_create_avatar_preset()
+    
+    # Clean up created presets
+    if personality_preset_id:
+        delete_personality_success, _ = tester.test_delete_personality_preset(personality_preset_id)
+    else:
+        delete_personality_success = True
+        
+    if avatar_preset_id:
+        delete_avatar_success, _ = tester.test_delete_avatar_preset(avatar_preset_id)
+    else:
+        delete_avatar_success = True
+
     # Print results
     print("\n" + "=" * 50)
     print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} passed")
@@ -308,6 +334,25 @@ def main():
         critical_failures.append("Root API endpoint not working")
     if not conversations_success:
         critical_failures.append("Conversations endpoint not working")
+    if not presets_success:
+        critical_failures.append("Personality presets endpoint not working")
+    if not avatar_presets_success:
+        critical_failures.append("Avatar presets endpoint not working")
+    if not mood_journal_success:
+        critical_failures.append("Mood journal endpoint not working")
+    
+    # Check new features specifically
+    new_features_working = []
+    if presets_success:
+        new_features_working.append("✅ Personality presets endpoint working")
+    if avatar_presets_success:
+        new_features_working.append("✅ Avatar presets endpoint working")
+    if mood_journal_success:
+        new_features_working.append("✅ Mood journal endpoint working")
+    if create_personality_success and delete_personality_success:
+        new_features_working.append("✅ Personality preset CRUD operations working")
+    if create_avatar_success and delete_avatar_success:
+        new_features_working.append("✅ Avatar preset CRUD operations working")
     
     if critical_failures:
         print(f"\n🚨 Critical Issues Found:")
@@ -317,6 +362,12 @@ def main():
     else:
         print(f"\n✅ Core API endpoints are working correctly")
         print(f"   Note: Chat endpoint failure is expected without Ollama")
+        
+        if new_features_working:
+            print(f"\n🎉 New Features Status:")
+            for feature in new_features_working:
+                print(f"   {feature}")
+        
         return 0
 
 if __name__ == "__main__":
