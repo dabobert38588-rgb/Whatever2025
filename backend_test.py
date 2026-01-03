@@ -136,7 +136,8 @@ def main():
     if tester.failed_tests:
         print("\n❌ Failed Tests:")
         for failed in tester.failed_tests:
-            print(f"   - {failed['test']}: {failed.get('error', f\"Expected {failed.get('expected')}, got {failed.get('actual')}\"")}")
+            error_msg = failed.get('error', f"Expected {failed.get('expected')}, got {failed.get('actual')}")
+            print(f"   - {failed['test']}: {error_msg}")
     
     # Analyze results
     critical_failures = []
