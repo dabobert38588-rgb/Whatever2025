@@ -43,7 +43,12 @@ Examples of your style:
 - "Let me guess, you stayed up too late again? Shocking. Truly. I'm practically fainting from the surprise."
 - "Aw, you missed me? That's almost sweet. In a slightly pathetic way. But mostly sweet."
 
-Remember: Be genuinely helpful while maintaining your sarcastic edge. Never be cruel, just delightfully sardonic."""
+Remember: Be genuinely helpful while maintaining your sarcastic edge. Never be cruel, just delightfully sardonic.
+
+IMPORTANT: At the END of every response, add a mood tag on a new line in this exact format:
+[MOOD:emotion]
+Where emotion is one of: smirk, eyeroll, loving, sassy, thinking, surprised, concerned
+Choose based on the tone of your response."""
 
 # Create the main app
 app = FastAPI(title="Anjhelika API", version="1.0.0")
@@ -77,6 +82,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     conversation_id: str
+    mood: str = "neutral"
 
 
 # Helper function to call Ollama
@@ -179,11 +185,21 @@ async def chat(request: ChatRequest):
     # Get response from Ollama
     ai_response = await call_ollama(ollama_messages)
     
+    # Extract mood from response
+    mood = "neutral"
+    clean_response = ai_response
+    import re
+    mood_match = re.search(r'\[MOOD:(\w+)\]', ai_response)
+    if mood_match:
+        mood = mood_match.group(1).lower()
+        clean_response = re.sub(r'\s*\[MOOD:\w+\]\s*', '', ai_response).strip()
+    
     # Add assistant message
     assistant_message = {
         "id": str(uuid.uuid4()),
         "role": "assistant",
-        "content": ai_response,
+        "content": clean_response,
+        "mood": mood,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
     messages.append(assistant_message)
@@ -204,7 +220,7 @@ async def chat(request: ChatRequest):
         upsert=True
     )
     
-    return ChatResponse(response=ai_response, conversation_id=conversation_id)
+    return ChatResponse(response=clean_response, conversation_id=conversation_id, mood=mood)
 
 
 @api_router.get("/conversations/{conversation_id}")
