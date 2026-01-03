@@ -17,7 +17,8 @@ const moodEmojis = {
   sassy: '💅',
   thinking: '🤔',
   surprised: '😲',
-  concerned: '😟'
+  concerned: '😟',
+  flirty: '😘'
 };
 
 const moodColors = {
@@ -28,7 +29,8 @@ const moodColors = {
   sassy: 'bg-fuchsia-500',
   thinking: 'bg-blue-500',
   surprised: 'bg-cyan-500',
-  concerned: 'bg-orange-500'
+  concerned: 'bg-orange-500',
+  flirty: 'bg-red-500'
 };
 
 const MoodJournal = ({ isOpen, onClose }) => {
