@@ -374,7 +374,9 @@ async def create_avatar_preset(preset: AvatarPreset):
     """Save an avatar preset"""
     doc = preset.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
-    await db.avatar_presets.insert_one(doc)
+    result = await db.avatar_presets.insert_one(doc)
+    # Remove the MongoDB ObjectId before returning
+    doc.pop('_id', None)
     return {"message": "Avatar preset saved", "preset": doc}
 
 
