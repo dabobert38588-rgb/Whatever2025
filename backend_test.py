@@ -112,21 +112,23 @@ class AnjelikaAPITester:
     def test_chat_with_personality(self):
         """Test chat endpoint with personality parameters"""
         success, response = self.run_test(
-            "Chat with Personality Parameters (Expected to fail without Ollama)",
+            "Chat with Personality Parameters (OpenAI GPT-5.2)",
             "POST",
             "chat",
-            503,  # Expected to fail with 503 (service unavailable)
+            200,  # Should work with OpenAI
             data={
-                "message": "Hello Anjhelika",
+                "message": "Tell me something sarcastic",
                 "personality": {
                     "sarcasm": 80,
                     "sweetness": 30
                 }
-            }
+            },
+            timeout=30
         )
-        # For this test, we expect it to fail, so we'll count it as passed if it fails with expected error
-        if not success and response == {}:
-            print("   ✅ Expected failure - Ollama not available, but personality params accepted")
+        if success:
+            print("   ✅ Personality parameters accepted and processed")
+            response_text = response.get('response', '')
+            print(f"   📝 Sarcastic response: {response_text[:100]}...")
             return True, response
         return success, response
 
