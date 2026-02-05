@@ -551,6 +551,14 @@ def main():
     if adult_mode_disabled_success:
         new_features_working.append("✅ Adult mode disabled parameter accepted by backend")
     
+    # Check NEW image generation and daily summary features
+    if generate_selfie_success:
+        new_features_working.append("✅ Selfie generation endpoint working (OpenAI gpt-image-1)")
+    if selfies_list_success:
+        new_features_working.append("✅ Selfies list endpoint working")
+    if daily_summary_success:
+        new_features_working.append("✅ Daily summary endpoint working (GPT-5.2)")
+    
     if critical_failures:
         print(f"\n🚨 Critical Issues Found:")
         for issue in critical_failures:
@@ -564,6 +572,21 @@ def main():
             print(f"\n🎉 New Features Status:")
             for feature in new_features_working:
                 print(f"   {feature}")
+        
+        # Check if new features are working
+        new_feature_failures = []
+        if not generate_selfie_success:
+            new_feature_failures.append("❌ Selfie generation not working")
+        if not selfies_list_success:
+            new_feature_failures.append("❌ Selfies list not working")
+        if not daily_summary_success:
+            new_feature_failures.append("❌ Daily summary not working")
+        
+        if new_feature_failures:
+            print(f"\n⚠️  New Feature Issues:")
+            for issue in new_feature_failures:
+                print(f"   {issue}")
+            return 1
         
         return 0
 
