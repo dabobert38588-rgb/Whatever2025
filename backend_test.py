@@ -489,6 +489,15 @@ def main():
     create_personality_success, create_personality_response, personality_preset_id = tester.test_create_personality_preset()
     create_avatar_success, create_avatar_response, avatar_preset_id = tester.test_create_avatar_preset()
     
+    # Test new image generation features
+    print("\n📸 Testing Selfie Generation Features...")
+    generate_selfie_success, generate_selfie_response = tester.test_generate_selfie_endpoint()
+    selfies_list_success, selfies_list_response = tester.test_selfies_list_endpoint()
+    
+    # Test daily summary feature
+    print("\n📊 Testing Daily Summary Feature...")
+    daily_summary_success, daily_summary_response = tester.test_daily_summary_endpoint()
+    
     # Clean up created presets
     if personality_preset_id:
         delete_personality_success, _ = tester.test_delete_personality_preset(personality_preset_id)
