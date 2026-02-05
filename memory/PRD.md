@@ -93,6 +93,22 @@ Build a local smart AI girlfriend/assistant named Anjhelika with:
   - New "flirty" mood (😘) for appropriate responses
   - Maintains sarcastic personality even in intimate moments
 
+### Phase 6 - Image Generation & Daily Summary (February 2025)
+- **Selfie Generator**:
+  - Uses OpenAI gpt-image-1 for AI-generated anime-style portraits
+  - Mood/Expression selection (smirk, loving, sassy, flirty, etc.)
+  - Setting selection (home, coffee shop, rooftop, beach, etc.)
+  - Custom setting text input
+  - Integrates with avatar customization (hair, eyes, skin)
+  - Selfie history saved to database
+  - Download button for generated images
+- **Daily Summary**:
+  - AI-generated sarcastic daily recap using GPT-5.2
+  - Shows message count, dominant mood
+  - Mood breakdown with progress bars
+  - All-time conversation stats
+  - Refresh button for updated summary
+
 ## Tech Stack
 - Frontend: React 19, TailwindCSS, Framer Motion, shadcn/ui
 - Backend: FastAPI, Motor (async MongoDB), httpx (Ollama client)
