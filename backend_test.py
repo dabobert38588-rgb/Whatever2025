@@ -357,6 +357,93 @@ class AnjelikaAPITester:
         )
         return success, response
 
+    def test_generate_selfie_endpoint(self):
+        """Test selfie generation endpoint"""
+        test_data = {
+            "mood": "smirk",
+            "context": "casual selfie at home",
+            "avatar_style": {
+                "hair": "black",
+                "eyes": "purple",
+                "skin": "light"
+            }
+        }
+        success, response = self.run_test(
+            "Generate Selfie (OpenAI gpt-image-1)",
+            "POST",
+            "generate-selfie",
+            200,
+            data=test_data,
+            timeout=90  # Image generation can take up to 60 seconds
+        )
+        if success:
+            # Check response structure
+            required_fields = ['image_base64', 'mood', 'id']
+            for field in required_fields:
+                if field in response:
+                    print(f"   ✅ Found required field: {field}")
+                else:
+                    print(f"   ❌ Missing required field: {field}")
+            
+            # Check if image data is present
+            image_data = response.get('image_base64', '')
+            if image_data and len(image_data) > 100:
+                print(f"   ✅ Image data present (length: {len(image_data)} chars)")
+            else:
+                print(f"   ❌ Image data missing or too short")
+            
+            return True, response
+        return success, response
+
+    def test_selfies_list_endpoint(self):
+        """Test selfies list endpoint"""
+        success, response = self.run_test(
+            "List Generated Selfies",
+            "GET",
+            "selfies",
+            200
+        )
+        if success:
+            selfies = response.get('selfies', [])
+            print(f"   ✅ Selfies list endpoint working, found {len(selfies)} selfies")
+        return success, response
+
+    def test_daily_summary_endpoint(self):
+        """Test daily summary endpoint"""
+        success, response = self.run_test(
+            "Get Daily Summary (GPT-5.2)",
+            "GET",
+            "daily-summary",
+            200,
+            timeout=60  # AI summary generation can take time
+        )
+        if success:
+            # Check required fields
+            required_fields = ['date', 'message_count', 'mood_breakdown', 'dominant_mood', 'ai_summary', 'total_all_time', 'generated_at']
+            for field in required_fields:
+                if field in response:
+                    print(f"   ✅ Found required field: {field}")
+                else:
+                    print(f"   ❌ Missing required field: {field}")
+            
+            # Check data structure
+            message_count = response.get('message_count', 0)
+            ai_summary = response.get('ai_summary', '')
+            dominant_mood = response.get('dominant_mood', 'neutral')
+            
+            print(f"   📊 Today's message count: {message_count}")
+            print(f"   🤖 AI summary length: {len(ai_summary)} chars")
+            print(f"   😊 Dominant mood: {dominant_mood}")
+            
+            if ai_summary and len(ai_summary) > 10:
+                print(f"   ✅ AI summary generated successfully")
+                print(f"   📝 Summary preview: {ai_summary[:100]}...")
+            else:
+                print(f"   ❌ AI summary missing or too short")
+            
+            return True, response
+        return success, response
+
 def main():
     print("🚀 Starting Anjhelika API Tests...")
     print("=" * 50)
