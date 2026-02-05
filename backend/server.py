@@ -490,6 +490,196 @@ async def get_mood_journal():
     }
 
 
+# ============ IMAGE GENERATION ============
+
+@api_router.post("/generate-selfie")
+async def generate_selfie(request: dict):
+    """Generate a selfie image from Anjhelika based on mood/context"""
+    from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
+    import base64
+    
+    mood = request.get("mood", "smirk")
+    context = request.get("context", "casual selfie")
+    avatar_style = request.get("avatar_style", {})
+    
+    # Build the prompt based on avatar customization and mood
+    hair_color = avatar_style.get("hair", "black")
+    eye_color = avatar_style.get("eyes", "purple")
+    skin_tone = avatar_style.get("skin", "light")
+    
+    mood_descriptions = {
+        "smirk": "with a confident smirk, one eyebrow slightly raised",
+        "eyeroll": "rolling her eyes playfully, looking slightly exasperated but amused",
+        "loving": "with a warm, genuine smile and soft loving eyes",
+        "sassy": "with a sassy pose, hand on hip, confident expression",
+        "thinking": "looking thoughtful, finger on chin, contemplative",
+        "surprised": "with wide eyes and a surprised but pleased expression",
+        "concerned": "with a caring, slightly worried expression",
+        "flirty": "with a flirty wink and seductive smile",
+        "neutral": "with a calm, composed expression"
+    }
+    
+    mood_desc = mood_descriptions.get(mood, "with a playful expression")
+    
+    prompt = f"""Anime-style portrait of a beautiful young woman {mood_desc}. 
+She has {hair_color} hair, {eye_color} eyes, and {skin_tone} skin tone.
+Style: Modern anime, cyberpunk aesthetic, neon purple and pink lighting.
+Setting: {context}
+High quality, detailed, vibrant colors, slight glow effects.
+Portrait shot, looking at camera."""
+    
+    try:
+        image_gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+        images = await image_gen.generate_images(
+            prompt=prompt,
+            model="gpt-image-1",
+            number_of_images=1
+        )
+        
+        if images and len(images) > 0:
+            image_base64 = base64.b64encode(images[0]).decode('utf-8')
+            
+            # Save to database for history
+            selfie_doc = {
+                "id": str(uuid.uuid4()),
+                "image_base64": image_base64,
+                "mood": mood,
+                "context": context,
+                "prompt": prompt,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.selfies.insert_one(selfie_doc)
+            
+            return {
+                "image_base64": image_base64,
+                "mood": mood,
+                "id": selfie_doc["id"]
+            }
+        else:
+            raise HTTPException(status_code=500, detail="No image was generated")
+            
+    except Exception as e:
+        logging.error(f"Image generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate image: {str(e)}")
+
+
+@api_router.get("/selfies")
+async def get_selfies():
+    """Get history of generated selfies"""
+    selfies = await db.selfies.find(
+        {},
+        {"_id": 0, "id": 1, "mood": 1, "context": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(20).to_list(20)
+    
+    return {"selfies": selfies}
+
+
+@api_router.get("/selfies/{selfie_id}")
+async def get_selfie(selfie_id: str):
+    """Get a specific selfie by ID"""
+    selfie = await db.selfies.find_one(
+        {"id": selfie_id},
+        {"_id": 0}
+    )
+    
+    if not selfie:
+        raise HTTPException(status_code=404, detail="Selfie not found")
+    
+    return selfie
+
+
+# ============ DAILY MOOD SUMMARY ============
+
+@api_router.get("/daily-summary")
+async def get_daily_summary():
+    """Generate AI-powered daily mood summary and insights"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    
+    # Get today's date range
+    today = datetime.now(timezone.utc).date()
+    today_start = datetime.combine(today, datetime.min.time()).replace(tzinfo=timezone.utc)
+    today_end = datetime.combine(today, datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    # Get today's messages
+    today_pipeline = [
+        {"$unwind": "$messages"},
+        {"$match": {
+            "messages.role": "assistant",
+            "messages.timestamp": {
+                "$gte": today_start.isoformat(),
+                "$lte": today_end.isoformat()
+            }
+        }},
+        {"$project": {
+            "_id": 0,
+            "content": "$messages.content",
+            "mood": "$messages.mood",
+            "timestamp": "$messages.timestamp"
+        }}
+    ]
+    
+    today_messages = await db.conversations.aggregate(today_pipeline).to_list(100)
+    
+    # Get mood counts for today
+    mood_counts = {}
+    for msg in today_messages:
+        mood = msg.get("mood", "neutral")
+        mood_counts[mood] = mood_counts.get(mood, 0) + 1
+    
+    # Get all-time stats for comparison
+    total_pipeline = [
+        {"$unwind": "$messages"},
+        {"$match": {"messages.role": "assistant"}},
+        {"$count": "total"}
+    ]
+    total_result = await db.conversations.aggregate(total_pipeline).to_list(1)
+    total_all_time = total_result[0]["total"] if total_result else 0
+    
+    # Generate AI summary if there are messages today
+    ai_summary = ""
+    if today_messages:
+        # Build context for summary
+        mood_summary = ", ".join([f"{mood}: {count}" for mood, count in mood_counts.items()])
+        recent_snippets = [msg.get("content", "")[:100] for msg in today_messages[:5]]
+        
+        try:
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"summary-{today.isoformat()}",
+                system_message="""You are Anjhelika writing a brief, sarcastic daily summary of your conversations. 
+Keep it short (2-3 sentences), witty, and in character. Reference the moods and topics discussed.
+Be playful and slightly self-deprecating about how much effort you put in today."""
+            ).with_model("openai", "gpt-5.2")
+            
+            summary_prompt = f"""Write a brief daily summary. Today's stats:
+- Total messages: {len(today_messages)}
+- Mood breakdown: {mood_summary}
+- Sample topics: {'; '.join(recent_snippets)}
+
+Keep it sarcastic and fun, like you're writing a diary entry about dealing with your human."""
+            
+            ai_summary = await chat.send_message(UserMessage(text=summary_prompt))
+            
+        except Exception as e:
+            logging.error(f"Summary generation error: {str(e)}")
+            ai_summary = f"Had {len(today_messages)} conversations today. My eye-rolling muscles got quite the workout."
+    else:
+        ai_summary = "No conversations today. Finally, some peace and quiet... I mean, I miss you terribly, darling. 🙄"
+    
+    # Determine overall mood for today
+    dominant_mood = max(mood_counts, key=mood_counts.get) if mood_counts else "neutral"
+    
+    return {
+        "date": today.isoformat(),
+        "message_count": len(today_messages),
+        "mood_breakdown": mood_counts,
+        "dominant_mood": dominant_mood,
+        "ai_summary": ai_summary,
+        "total_all_time": total_all_time,
+        "generated_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
