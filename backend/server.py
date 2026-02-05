@@ -448,7 +448,19 @@ async def get_mood_journal():
             "content": "$messages.content"  # Get full content, we'll truncate in Python
         }}
     ]
-    recent_moods = await db.conversations.aggregate(recent_pipeline).to_list(20)
+    recent_moods_raw = await db.conversations.aggregate(recent_pipeline).to_list(20)
+    
+    # Process recent moods and safely truncate content in Python
+    recent_moods = []
+    for mood_data in recent_moods_raw:
+        content = mood_data.get("content", "")
+        # Safely truncate to 50 characters, ensuring we don't break UTF-8
+        preview = content[:50] if len(content) <= 50 else content[:47] + "..."
+        recent_moods.append({
+            "mood": mood_data.get("mood"),
+            "timestamp": mood_data.get("timestamp"),
+            "preview": preview
+        })
     
     # Calculate mood percentages
     mood_percentages = {}
