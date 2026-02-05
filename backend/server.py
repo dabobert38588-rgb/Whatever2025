@@ -445,7 +445,7 @@ async def get_mood_journal():
             "_id": 0,  # Exclude MongoDB ObjectId
             "mood": "$messages.mood",
             "timestamp": "$messages.timestamp",
-            "preview": {"$substr": ["$messages.content", 0, 50]}
+            "content": "$messages.content"  # Get full content, we'll truncate in Python
         }}
     ]
     recent_moods = await db.conversations.aggregate(recent_pipeline).to_list(20)
