@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Toaster, toast } from 'sonner';
-import { Send, Loader2, Menu, Radio, BookHeart } from 'lucide-react';
+import { Send, Loader2, Menu, Radio, BookHeart, Camera, Sun } from 'lucide-react';
 
 import VoiceOrb from './components/VoiceOrb';
 import ChatMessage from './components/ChatMessage';
@@ -11,6 +11,8 @@ import SettingsPanel from './components/SettingsPanel';
 import AnimatedAvatar from './components/AnimatedAvatar';
 import ConversationSidebar from './components/ConversationSidebar';
 import MoodJournal from './components/MoodJournal';
+import SelfieGenerator from './components/SelfieGenerator';
+import DailySummary from './components/DailySummary';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { ScrollArea } from './components/ui/scroll-area';
@@ -33,6 +35,8 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showMoodJournal, setShowMoodJournal] = useState(false);
+  const [showSelfieGenerator, setShowSelfieGenerator] = useState(false);
+  const [showDailySummary, setShowDailySummary] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [ollamaStatus, setOllamaStatus] = useState('checking');
   const [ollamaModel, setOllamaModel] = useState('');
@@ -419,27 +423,51 @@ function App() {
             </p>
           </div>
           
-          <Button
-            variant={wakeWordActive ? 'default' : 'ghost'}
-            size="icon"
-            onClick={toggleWakeWord}
-            className={`rounded-full ${wakeWordActive ? 'neon-secondary' : ''}`}
-            data-testid="wake-word-toggle"
-            title={wakeWordActive ? 'Wake word active' : 'Enable wake word'}
-          >
-            <Radio className={`h-5 w-5 ${wakeWordActive ? 'text-secondary animate-pulse' : ''}`} />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowMoodJournal(true)}
-            className="rounded-full"
-            data-testid="mood-journal-btn"
-            title="Mood Journal"
-          >
-            <BookHeart className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant={wakeWordActive ? 'default' : 'ghost'}
+              size="icon"
+              onClick={toggleWakeWord}
+              className={`rounded-full ${wakeWordActive ? 'neon-secondary' : ''}`}
+              data-testid="wake-word-toggle"
+              title={wakeWordActive ? 'Wake word active' : 'Enable wake word'}
+            >
+              <Radio className={`h-5 w-5 ${wakeWordActive ? 'text-secondary animate-pulse' : ''}`} />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSelfieGenerator(true)}
+              className="rounded-full"
+              data-testid="selfie-btn"
+              title="Request Selfie"
+            >
+              <Camera className="h-5 w-5" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDailySummary(true)}
+              className="rounded-full"
+              data-testid="daily-summary-btn"
+              title="Daily Summary"
+            >
+              <Sun className="h-5 w-5" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowMoodJournal(true)}
+              className="rounded-full"
+              data-testid="mood-journal-btn"
+              title="Mood Journal"
+            >
+              <BookHeart className="h-5 w-5" />
+            </Button>
+          </div>
         </motion.header>
 
         {/* Chat area */}
@@ -666,6 +694,19 @@ function App() {
       <MoodJournal
         isOpen={showMoodJournal}
         onClose={() => setShowMoodJournal(false)}
+      />
+
+      {/* Selfie Generator */}
+      <SelfieGenerator
+        isOpen={showSelfieGenerator}
+        onClose={() => setShowSelfieGenerator(false)}
+        avatarCustomization={avatarCustomization}
+      />
+
+      {/* Daily Summary */}
+      <DailySummary
+        isOpen={showDailySummary}
+        onClose={() => setShowDailySummary(false)}
       />
     </div>
   );
